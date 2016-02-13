@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "out": "public/scripts/game.js",
+        "outDir": "public/scripts/game"
+    },
+    "filesGlob": [
+        "src/**/*.ts",
+        "typings/**/*.d.ts"
+    ],
+    "atom": {
+        "rewriteTsconfig": false
+    }
+}
