@@ -16,9 +16,6 @@ const del = require('del');
 const path = require('path');
 const browserSync = require('browser-sync').create();
 const runSequence = require('run-sequence');
-const merge = require('merge-stream');
-const globby = require('globby');
-const through = require('through2');
 const p = require('./package.json');
 
 /**
@@ -52,7 +49,7 @@ const PHASER_DIR = `${VENDOR_DIR}/phaser`;
 function isDebug()              { return !!argv.debug; }
 function ifDebug(destination)   { return gulpif(isDebug(), destination); }
 function ifRelease(destination) { return gulpif(!isDebug(), destination); }
-function onError(error)         { gutil.log(gutil.colors.red(error.stack || error)) }
+function onError(error)         { gutil.log(gutil.colors.red(error.stack || error)); }
 
 /**
  * Clean the target directories.
@@ -65,21 +62,13 @@ gulp.task('clean', () => {
 
 /**
  * Install Phaser.
- * Also make sure it's type definitions are installed.
  */
 gulp.task('phaser', () => {
-    const jsFiles = ['phaser.min.js', 'phaser.js', 'phaser.map'];
-    let js = gulp.src(jsFiles.map(_ => `${PHASER_DIR}/build/${_}`))
+    const files = ['phaser.min.js', 'phaser.js', 'phaser.map'];
+    return gulp.src(files.map(_ => `${PHASER_DIR}/build/${_}`))
         .pipe(ifRelease(filter(['*.min.js'])))
         .pipe(changed(SCRIPTS_DIR))
         .pipe(gulp.dest(SCRIPTS_DIR));
-
-    const tsdFiles = ['phaser.comments.d.ts', 'pixi.comments.d.ts', 'p2.d.ts'];
-    let tsd = gulp.src(tsdFiles.map(_ => `${PHASER_DIR}/typescript/${_}`))
-        .pipe(changed(TYPINGS_DIR))
-        .pipe(gulp.dest(TYPINGS_DIR));
-
-    return merge(js, tsd);
 });
 
 /**
@@ -90,7 +79,7 @@ gulp.task('dependencies', ['phaser']);
 
 /**
  * Compile the application.
- * Pass the source files through Browserify & Babelify. If it's a DEBUG build,
+ * Pass the source files through Browserify & Tsify. If it's a DEBUG build,
  * extract the source map into it's own file, and if it's a RELEASE build
  * minify the results.
  */
@@ -102,30 +91,19 @@ gulp.task('compile', () => {
         gutil.log(gutil.colors.green('Compiling RELEASE application...'));
     }
 
-    const tsFiles = [ MAIN_FILE, `${TYPINGS_DIR}/**/*.d.ts` ];
+    const b = browserify({
+        entries: [ MAIN_FILE, `${TYPINGS_DIR}/tsd.d.ts` ],
+        paths: [ SOURCE_DIR ],
+        debug: isDebug()
+    });
 
-    // This stream is needed to turn browserify's stream into a gulp stream.
-    // As we create the browserify stream in a callback, we need to declare
-    // this up front...
-    let stream = through();
-    stream.pipe(ifDebug(exorcist(`${SCRIPTS_DIR}/${TARGET_FILE.replace('.js', '.map')}`)))
+    return b.plugin(tsify)
+        .bundle().on('error', onError)
+        .pipe(ifDebug(exorcist(`${SCRIPTS_DIR}/${TARGET_FILE.replace('.js', '.map')}`)))
         .pipe(source(TARGET_FILE))
         .pipe(buffer())
         .pipe(ifRelease(uglify()))
-        .on('error', onError)
         .pipe(gulp.dest(SCRIPTS_DIR));
-
-    // As we need to pass multiple globbed entries to browserify, we use `globby`
-    // to create the list and then pass that to browserify...
-    globby(tsFiles).then(entries => {
-        browserify({
-            entries: entries,
-            paths: [ SOURCE_DIR ],
-            debug: isDebug()
-        }).plugin(tsify).bundle().on('error', onError).pipe(stream);
-    }).catch(err => stream.emit('error', err));
-
-    return stream;
 });
 
 /**
@@ -152,7 +130,7 @@ gulp.task('serve', ['rebuild'], () => {
         open: false
     });
 
-    // Watch for changes to the JS code and reload
+    // Watch for changes to the TS code and reload
     gulp.watch(`${SOURCE_DIR}/**/*.ts`, ['watch-ts']);
 });
 

@@ -1,3 +1,3 @@
-# Phaser ES6 Template
+# Phaser TypeScript Template
 
 TBD

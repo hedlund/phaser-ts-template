@@ -8,6 +8,9 @@
         "src/**/*.ts",
         "typings/**/*.d.ts"
     ],
+    "files": [
+        "typings/tsd.d.ts"
+    ],
     "atom": {
         "rewriteTsconfig": false
     }
