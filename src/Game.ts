@@ -14,4 +14,5 @@ class Game extends Phaser.Game {
 
 }
 
+/* tslint:disable:no-unused-expression */
 new Game();

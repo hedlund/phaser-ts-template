@@ -4,11 +4,11 @@
  */
 export default class BootState extends Phaser.State {
 
-    preload() {
+    public preload(): void {
 		this.load.image('loadbar', 'assets/images/loadbar.png');
 	}
 
-    create() {
+    public create(): void {
         // Set the background color
         this.stage.backgroundColor = '#000';
 

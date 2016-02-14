@@ -6,7 +6,7 @@ export default class LoaderState extends Phaser.State {
 
 	private loadbar: Phaser.Sprite;
 
-    preload() {
+    public preload(): void {
 		// Setup the preloader sprite
 		this.loadbar = this.add.sprite(this.world.centerX, this.world.centerY, 'loadbar');
 		this.loadbar.anchor.set(0.5);
@@ -17,7 +17,7 @@ export default class LoaderState extends Phaser.State {
 		this.load.image('phaser', 'assets/images/phaser.png');
 	}
 
-    create() {
+    public create(): void {
 		this.game.state.start('main');
 	}
 }

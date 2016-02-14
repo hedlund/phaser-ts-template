@@ -7,6 +7,7 @@ const gulpif = require('gulp-if');
 const gutil = require('gulp-util');
 const buffer = require('gulp-buffer');
 const uglify = require('gulp-uglify');
+const tslint = require("gulp-tslint");
 const source = require('vinyl-source-stream');
 const browserify = require('browserify');
 const tsify = require('tsify');
@@ -78,6 +79,16 @@ gulp.task('phaser', () => {
 gulp.task('dependencies', ['phaser']);
 
 /**
+ * Lint the code to increase quality.
+ * All the actual configuration for eslint is in the file `tslint.json`.
+ */
+gulp.task('lint', () => {
+    return gulp.src(`${SOURCE_DIR}/**/*.ts`)
+        .pipe(tslint())
+        .pipe(tslint.report("verbose", { summarizeFailureOutput: true }));
+});
+
+/**
  * Compile the application.
  * Pass the source files through Browserify & Tsify. If it's a DEBUG build,
  * extract the source map into it's own file, and if it's a RELEASE build
@@ -108,9 +119,10 @@ gulp.task('compile', () => {
 
 /**
  * Build the application.
- * Install the necessary dependencies and compile the application.
+ * Install the necessary dependencies, lint the source and then compile
+ * the application.
  */
-gulp.task('build', ['dependencies', 'compile']);
+gulp.task('build', ['dependencies', 'lint', 'compile']);
 
 /**
  * Rebuild the application.

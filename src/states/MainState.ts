@@ -4,7 +4,7 @@
  */
 export default class MainState extends Phaser.State {
 
-	create() {
+	public create(): void {
 		let logo = this.add.sprite(this.world.centerX, this.world.centerY, 'phaser');
 		logo.anchor.set(0.5);
 	}
